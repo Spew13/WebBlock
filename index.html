@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WebBlock</title>
+  <style>
+    :root{
+      --bg:#0b1020; --card:#0f1724; --accent:#7CFC00; --muted:#9aa4b2;
+    }
+    /* rainbow scrollbar */
+    ::-webkit-scrollbar{height:10px;width:12px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:linear-gradient(90deg,#ff4d4d,#ffb86b,#fff27a,#7cffb2,#7cc0ff,#c58bff);border-radius:999px}
+
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#061021 0%, #071428 45%, #0b1020 100%);color:#e6eef6;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px}
+
+    .card{width:100%;max-width:980px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:18px;padding:20px;box-shadow:0 8px 30px rgba(3,6,23,0.7);border:1px solid rgba(124,252,0,0.06)}
+
+    header{display:flex;align-items:center;gap:16px}
+    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,#7CFC00 0%,#00d4ff 50%,#c58bff 100%);display:grid;place-items:center;color:#061021;font-weight:700;font-size:20px;box-shadow:0 6px 18px rgba(124,252,0,0.08)}
+    h1{margin:0;font-size:20px}
+    p.lead{margin:4px 0 0;color:var(--muted);font-size:13px}
+
+    .controls{display:flex;gap:12px;align-items:center;margin-top:18px}
+    input[type=text]{flex:1;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:inherit;outline:none;font-size:14px}
+    input[type=text]::placeholder{color:#7b8794}
+    .btn{padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:600}
+    .btn.load{background:linear-gradient(90deg,#7CFC00,#00d4ff);color:#061021}
+    .btn.unload{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+
+    .meta{margin-top:10px;color:var(--muted);font-size:13px}
+
+    .iframe-wrap{margin-top:18px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);background:#020612;min-height:420px;position:relative}
+    iframe{width:100%;height:560px;border:0;display:block}
+
+    .placeholder{padding:36px;display:grid;place-items:center;color:var(--muted)}
+    .notice{position:absolute;left:12px;top:12px;background:rgba(0,0,0,0.45);padding:6px 10px;border-radius:8px;font-size:12px;border:1px solid rgba(255,255,255,0.03)}
+
+    footer{margin-top:14px;color:var(--muted);font-size:12px;text-align:right}
+
+    @media (max-width:640px){iframe{height:420px}}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <header>
+      <div class="logo">WB</div>
+      <div>
+        <h1>WebBlock</h1>
+        <p class="lead">Paste a URL into the box and click "Click to Load" to load it inside the frame.</p>
+      </div>
+    </header>
+
+    <div class="controls">
+      <input id="url" type="text" placeholder="https://example.com — paste a link here" />
+      <button id="loadBtn" class="btn load">Click to Load</button>
+      <button id="unloadBtn" class="btn unload">Click to Unload</button>
+    </div>
+    <div class="meta">Some sites block being embedded, don't be upset or complain to the admins. If a site won't load, try a different URL, maybe it'll work.</div>
+
+    <div class="iframe-wrap" id="frameWrap">
+      <div class="notice" id="notice">No site loaded</div>
+      <div class="placeholder" id="placeholder">
+        <div>
+          <strong>Ready.</strong>
+          <div style="height:8px"></div>
+          <div style="color:var(--muted)">Paste a link and click load — the iframe will appear here.</div>
+        </div>
+      </div>
+      <!-- iframe will be inserted here -->
+    </div>
+
+    <footer>Saved to your browser until you clear it.</footer>
+  </main>
+
+  <script>
+    const urlInput = document.getElementById('url');
+    const loadBtn = document.getElementById('loadBtn');
+    const unloadBtn = document.getElementById('unloadBtn');
+    const frameWrap = document.getElementById('frameWrap');
+    const placeholder = document.getElementById('placeholder');
+    const notice = document.getElementById('notice');
+
+    // restore last url
+    const LAST_KEY = 'iframeLoader:lastUrl';
+    const last = localStorage.getItem(LAST_KEY);
+    if(last){ urlInput.value = last; }
+
+    function validUrl(s){ try{ const u = new URL(s); return ['http:','https:'].includes(u.protocol);}catch(e){return false}}
+
+    function setNotice(text){ notice.textContent = text }
+
+    function createIframe(src){
+      // remove existing
+      const existing = frameWrap.querySelector('iframe');
+      if(existing) existing.remove();
+
+      const iframe = document.createElement('iframe');
+      iframe.src = src;
+      // allow a few features but keep sandbox relaxed so most sites work; remove sandbox if you want full functionality
+      // iframe.sandbox = 'allow-scripts allow-same-origin allow-forms';
+      iframe.addEventListener('load', ()=> setNotice('Loaded: ' + src));
+      iframe.addEventListener('error', ()=> setNotice('Failed to load — site may block framing.'));
+      frameWrap.appendChild(iframe);
+      placeholder.style.display = 'none';
+    }
+
+    loadBtn.addEventListener('click', ()=>{
+      const val = urlInput.value.trim();
+      if(!val){ setNotice('Please paste a URL first.'); return }
+      // try to normalize missing scheme
+      let tryUrl = val;
+      if(!/^https?:\/\//i.test(tryUrl)) tryUrl = 'https://' + tryUrl;
+      if(!validUrl(tryUrl)){ setNotice('That does not look like a valid URL.'); return }
+
+      // save
+      localStorage.setItem(LAST_KEY, tryUrl);
+      setNotice('Loading — please wait...');
+      createIframe(tryUrl);
+    });
+
+    unloadBtn.addEventListener('click', ()=>{
+      const existing = frameWrap.querySelector('iframe');
+      if(existing) existing.remove();
+      placeholder.style.display = 'grid';
+      setNotice('No site loaded');
+    });
+
+    // allow pressing Enter in the input to load
+    urlInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') loadBtn.click(); });
+  </script>
+</body>
+</html>
