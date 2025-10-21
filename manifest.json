@@ -1,0 +1,21 @@
+{
+  "name": "WebBlock",
+  "short_name": "WebBlock",
+  "description": "Unblock sites and manage your web usage. This site can unblock almost anything, just put a link in!",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4CAF50",
+  "icons": [
+    {
+      "src": "icons/mylogo-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/mylogo-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
