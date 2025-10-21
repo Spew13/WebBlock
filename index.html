@@ -10,6 +10,37 @@
     :root{
       --bg:#0b1020; --card:#0f1724; --accent:#7CFC00; --muted:#9aa4b2;
     }
+    /* Ensure body has no extra margins or scroll */
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent scrolling */
+  position: relative;
+}
+
+/* Back button fixed at bottom center */
+#backButton {
+  position: fixed;
+  bottom: 20px; /* distance from bottom */
+  left: 50%;
+  transform: translateX(-50%); /* center horizontally */
+  
+  background: linear-gradient(45deg, #a8ff00, #32cd32); /* lime gradient */
+  border: none;
+  border-radius: 8px;
+  color: white;
+  padding: 12px 24px;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 9999; /* on top of everything */
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#backButton:hover {
+  transform: translateX(-50%) scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
     /* rainbow scrollbar */
     ::-webkit-scrollbar{height:10px;width:12px}
     ::-webkit-scrollbar-track{background:transparent}
@@ -75,6 +106,7 @@
     </div>
 
     <footer>Saved to your browser until you clear it.</footer>
+    <button id="backButton">Go Back</button>
   </main>
 
   <script>
@@ -132,6 +164,10 @@
 
     // allow pressing Enter in the input to load
     urlInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') loadBtn.click(); });
+    document.getElementById('backButton').addEventListener('click', function() {
+  window.location.href = 'https://spew13.github.io';
+});
+
   </script>
 </body>
 </html>
