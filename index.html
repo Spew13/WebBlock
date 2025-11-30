@@ -97,62 +97,66 @@ body {
   </main>
 
   <script>
-    const urlInput = document.getElementById('url');
-    const loadBtn = document.getElementById('loadBtn');
-    const unloadBtn = document.getElementById('unloadBtn');
-    const frameWrap = document.getElementById('frameWrap');
-    const placeholder = document.getElementById('placeholder');
-    const notice = document.getElementById('notice');
+    // Wrap everything in an event listener to wait for the page to load
+    document.addEventListener('DOMContentLoaded', () => { 
+        
+        const urlInput = document.getElementById('url');
+        const loadBtn = document.getElementById('loadBtn');
+        const unloadBtn = document.getElementById('unloadBtn');
+        const frameWrap = document.getElementById('frameWrap');
+        const placeholder = document.getElementById('placeholder');
+        const notice = document.getElementById('notice');
 
-    // restore last url
-    const LAST_KEY = 'iframeLoader:lastUrl';
-    const last = localStorage.getItem(LAST_KEY);
-    if(last){ urlInput.value = last; }
+        // restore last url
+        const LAST_KEY = 'iframeLoader:lastUrl';
+        const last = localStorage.getItem(LAST_KEY);
+        if(last){ urlInput.value = last; }
 
-    function validUrl(s){ try{ const u = new URL(s); return ['http:','https:'].includes(u.protocol);}catch(e){return false}}
+        function validUrl(s){ try{ const u = new URL(s); return ['http:','https:'].includes(u.protocol);}catch(e){return false}}
 
-    function setNotice(text){ notice.textContent = text }
+        function setNotice(text){ notice.textContent = text }
 
-    function createIframe(src){
-      // remove existing
-      const existing = frameWrap.querySelector('iframe');
-      if(existing) existing.remove();
+        function createIframe(src){
+        // remove existing
+        const existing = frameWrap.querySelector('iframe');
+        if(existing) existing.remove();
 
-      const iframe = document.createElement('iframe');
-      iframe.src = src;
-      // allow a few features but keep sandbox relaxed so most sites work; remove sandbox if you want full functionality
-      // iframe.sandbox = 'allow-scripts allow-same-origin allow-forms';
-      iframe.addEventListener('load', ()=> setNotice('Loaded: ' + src));
-      iframe.addEventListener('error', ()=> setNotice('Failed to load — site may block framing.'));
-      frameWrap.appendChild(iframe);
-      placeholder.style.display = 'none';
-    }
+        const iframe = document.createElement('iframe');
+        iframe.src = src;
+        // allow a few features but keep sandbox relaxed so most sites work; remove sandbox if you want full functionality
+        // iframe.sandbox = 'allow-scripts allow-same-origin allow-forms';
+        iframe.addEventListener('load', ()=> setNotice('Loaded: ' + src));
+        iframe.addEventListener('error', ()=> setNotice('Failed to load — site may block framing.'));
+        frameWrap.appendChild(iframe);
+        placeholder.style.display = 'none';
+        }
 
-    loadBtn.addEventListener('click', ()=>{
-      const val = urlInput.value.trim();
-      if(!val){ setNotice('Please paste a URL first.'); return }
-      // try to normalize missing scheme
-      let tryUrl = val;
-      if(!/^https?:\/\//i.test(tryUrl)) tryUrl = 'https://' + tryUrl;
-      if(!validUrl(tryUrl)){ setNotice('That does not look like a valid URL.'); return }
+        loadBtn.addEventListener('click', ()=>{
+        const val = urlInput.value.trim();
+        if(!val){ setNotice('Please paste a URL first.'); return }
+        // try to normalize missing scheme
+        let tryUrl = val;
+        if(!/^https?:\/\//i.test(tryUrl)) tryUrl = 'https://' + tryUrl;
+        if(!validUrl(tryUrl)){ setNotice('That does not look like a valid URL.'); return }
 
-      // save
-      localStorage.setItem(LAST_KEY, tryUrl);
-      setNotice('Loading — please wait...');
-      createIframe(tryUrl);
-    });
+        // save
+        localStorage.setItem(LAST_KEY, tryUrl);
+        setNotice('Loading — please wait...');
+        createIframe(tryUrl);
+        });
 
-    unloadBtn.addEventListener('click', ()=>{
-      const existing = frameWrap.querySelector('iframe');
-      if(existing) existing.remove();
-      placeholder.style.display = 'grid';
-      setNotice('No site loaded');
-    });
+        unloadBtn.addEventListener('click', ()=>{
+        const existing = frameWrap.querySelector('iframe');
+        if(existing) existing.remove();
+        placeholder.style.display = 'grid';
+        setNotice('No site loaded');
+        });
 
-    // allow pressing Enter in the input to load
-    urlInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') loadBtn.click(); });
-});
+        // allow pressing Enter in the input to load
+        urlInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') loadBtn.click(); });
+        
+    }); // <--- New closing tag for the DOMContentLoaded listener
 
-  </script>
+  </script>
 </body>
 </html>
